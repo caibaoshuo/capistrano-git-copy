@@ -1,0 +1,15 @@
+image: ruby:2.5-slim
+
+cache:
+  paths:
+    - vendor/ruby
+
+before_script:
+  - apt-get update -q && apt-get install git build-essential -yqq
+  - ruby -v
+  - gem install bundler --no-ri --no-rdoc
+  - bundle install -j $(nproc) --path vendor
+
+rubocop:
+  script:
+    - bundle exec rubocop

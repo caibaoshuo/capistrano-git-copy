@@ -1,11 +1,14 @@
 require 'tmpdir'
 require 'capistrano/scm/plugin'
+require 'capistrano/git_copy/scm_helpers'
 
 module Capistrano
   module GitCopy
     # SCM plugin for capistrano
     # uses a local clone and uploads a tar archive to the server
     class SCM < ::Capistrano::SCM::Plugin
+      include Capistrano::GitCopy::SCMHelpers
+
       # set default values
       def set_defaults
         set_if_empty :with_clean, true
@@ -16,7 +19,7 @@ module Capistrano
 
       # define plugin tasks
       def define_tasks
-        eval_rakefile File.expand_path('../tasks/git_copy.rake', __FILE__)
+        eval_rakefile File.expand_path('tasks/git_copy.rake', __dir__)
       end
 
       # register capistrano hooks
@@ -38,15 +41,7 @@ module Capistrano
       # @return [Boolean] indicates if repo cache exists
       def test
         if backend.test("[ -d #{repo_cache_path} ]")
-          backend.within(repo_cache_path) do
-            if backend.test(:git, :status, '>/dev/null 2>/dev/null')
-              true
-            else
-              backend.execute(:rm, '-rf', repo_cache_path)
-
-              false
-            end
-          end
+          check_repo_cache_path
         else
           false
         end
@@ -76,26 +71,16 @@ module Capistrano
         end
 
         # cleanup
-        if fetch(:with_clean)
-          git(:clean, '-d', '-f')
-        end
+        git(:clean, '-d', '-f') if fetch(:with_clean)
 
-        if fetch(:with_submodules)
-          git(:submodule, :foreach, '--recursive', :git, :clean, '-d', '-f')
-        end
+        git(:submodule, :foreach, '--recursive', :git, :clean, '-d', '-f') if fetch(:with_submodules)
       end
 
       # Create tar archive
       #
       # @return void
       def prepare_release
-        if fetch(:upload_path) != '.'
-          backend.execute(:tar, '-czf', archive_path, '-C', fetch(:upload_path), '.')
-        elsif fetch(:with_submodules)
-          backend.execute(git_archive_all_bin, "--prefix=''", archive_path)
-        else
-          git(:archive, '--format=tar', 'HEAD', '|', 'gzip', "> #{archive_path}")
-        end
+        package_release_archive
 
         exclude_files_from_archive if fetch(:git_excludes, []).count > 0
       end
@@ -110,9 +95,7 @@ module Capistrano
 
         backend.upload!(archive_path, remote_archive_path)
 
-        backend.execute(:mkdir, '-p', release_path)
-        backend.execute(:tar, '-f', remote_archive_path, '-x', '-C', release_path)
-        backend.execute(:rm, '-f', remote_archive_path)
+        extract_archive_on_remote(remote_archive_path)
       end
 
       # Set deployed revision
@@ -135,74 +118,21 @@ module Capistrano
       #
       # @return [String]
       def tmp_path
-        @_tmp_path ||= File.join(Dir.tmpdir, deploy_id)
+        @tmp_path ||= File.join(Dir.tmpdir, deploy_id)
       end
 
       # Path to repository cache
       #
       # @return [String]
       def repo_cache_path
-        @_repo_cache_path ||= fetch(:git_repo_cach_path, File.join(tmp_path, 'repo'))
+        @repo_cache_path ||= fetch(:git_repo_cach_path, File.join(tmp_path, 'repo'))
       end
 
       # Path to archive
       #
       # @return [String]
       def archive_path
-        @_archive_path ||= File.join(tmp_path, 'archive.tar.gz')
-      end
-
-      private
-
-      def deploy_id
-        [
-          fetch(:application),
-          fetch(:stage),
-          Digest::MD5.hexdigest(fetch(:repo_url))[0..7],
-          Digest::MD5.hexdigest(Dir.getwd)[0..7]
-        ].compact.join('_').gsub(/[^\w]/, '')
-      end
-
-      def commit_hash
-        return @_commit_hash if @_commit_hash
-
-        branch = fetch(:branch, 'master').to_s.strip
-
-        if backend.test(:git, 'rev-parse', "origin/#{branch}", '>/dev/null 2>/dev/null')
-          @_commit_hash = backend.capture(:git, 'rev-parse', "origin/#{branch}").strip
-        else
-          @_commit_hash = backend.capture(:git, 'rev-parse', branch).strip
-        end
-      end
-
-      def git_archive_all_bin
-        File.expand_path('../../../../vendor/git-archive-all/git_archive_all.py', __FILE__)
-      end
-
-      def git(*args)
-        backend.execute(:git, *args)
-      end
-
-      def exclude_files_from_archive
-        archive_dir = File.join(tmp_path, 'archive')
-
-        backend.execute(:rm, '-rf', archive_dir)
-        backend.execute(:mkdir, '-p', archive_dir)
-        backend.execute(:tar, '-xzf', archive_path, '-C', archive_dir)
-
-        fetch(:git_excludes, []).each do |f|
-          file_path = File.join(archive_dir, f.gsub(/\A\//, ''))
-
-          unless File.exists?(file_path)
-            backend.warn("#{f} does not exists!")
-
-            next
-          end
-
-          FileUtils.rm_rf(file_path)
-        end
-
-        backend.execute(:tar, '-czf', archive_path, '-C', archive_dir, '.')
+        @archive_path ||= File.join(tmp_path, 'archive.tar.gz')
       end
     end
   end

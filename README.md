@@ -1,7 +1,3 @@
-[![Gem Version](https://img.shields.io/gem/v/capistrano-git-copy.svg)](https://rubygems.org/gems/capistrano-git-copy)
-[![Code Climate](https://img.shields.io/codeclimate/github/ydkn/capistrano-git-copy.svg)](https://codeclimate.com/github/ydkn/capistrano-git-copy)
-
-
 # Capistrano::GitCopy
 
 Creates a tar archive locally from the git repository and uploads it to the remote server.
