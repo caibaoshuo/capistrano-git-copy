@@ -1,5 +1,9 @@
 # Change Log
 
+## Unreleased
+### Changes
+  - updated _git-archive-all_ to 1.18.2
+
 ## 1.5.0 (2018-05-24)
 ### Feature
   - add option to switch off running git clean (#25)
