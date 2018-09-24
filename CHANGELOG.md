@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.5.1 (2018-09-24)
 ### Changes
   - updated _git-archive-all_ to 1.18.2
 
