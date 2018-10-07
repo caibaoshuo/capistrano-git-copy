@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 set :git_copy_plugin, self
 
 namespace :git_copy do

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'tmpdir'
 require 'capistrano/scm/plugin'
 require 'capistrano/git_copy/scm_helpers'
@@ -82,7 +84,7 @@ module Capistrano
       def prepare_release
         package_release_archive
 
-        exclude_files_from_archive if fetch(:git_excludes, []).count > 0
+        exclude_files_from_archive if fetch(:git_excludes, []).length.positive?
       end
 
       # Upload and extract release
