@@ -69,13 +69,13 @@ module Capistrano
         if fetch(:with_submodules)
           git(:submodule, :init)
           git(:submodule, :update)
-          git(:submodule, :foreach, '--recursive', :git, :submodule, :update, '--init')
+          git(:submodule, :foreach, '--recursive', '"git submodule update --init"')
         end
 
         # cleanup
         git(:clean, '-d', '-f') if fetch(:with_clean)
 
-        git(:submodule, :foreach, '--recursive', :git, :clean, '-d', '-f') if fetch(:with_submodules)
+        git(:submodule, :foreach, '--recursive', '"git clean -d -f"') if fetch(:with_submodules)
       end
 
       # Create tar archive
