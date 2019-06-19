@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - usage with git versions >= 2.22.0
+### Changed
+- updated _git-archive-all_ to 1.19.4
 
 ## 1.5.4 (2018-11-14)
 ### Changed
