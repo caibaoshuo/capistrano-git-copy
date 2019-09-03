@@ -1,3 +1,0 @@
-[submodule "vendor/git-archive-all"]
-	path = vendor/git-archive-all
-	url = https://gitlab.com/ydkn/git-archive-all.git
