@@ -127,14 +127,14 @@ module Capistrano
       #
       # @return [String]
       def repo_cache_path
-        @repo_cache_path ||= fetch(:git_repo_cach_path, File.join(tmp_path, 'repo'))
+        @repo_cache_path ||= File.join(fetch(:git_repo_cache_path, tmp_path), 'repo')
       end
 
       # Path to archive
       #
       # @return [String]
       def archive_path
-        @archive_path ||= File.join(tmp_path, 'archive.tar.gz')
+        @archive_path ||= File.join(fetch(:git_repo_cache_path, tmp_path), 'archive.tar.gz')
       end
     end
   end
